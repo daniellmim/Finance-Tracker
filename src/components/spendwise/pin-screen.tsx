@@ -16,10 +16,17 @@ type PinScreenProps = {
 export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
   const [input, setInput] = React.useState("");
   const [confirmInput, setConfirmInput] = React.useState("");
-  const [isSettingPin, setIsSettingPin] = React.useState(!pin);
+  // This state now correctly reflects if we are in 'set' or 'enter' mode.
+  const [isSettingPin, setIsSettingPin] = React.useState(false);
   const { toast } = useToast();
 
+  // Effect to decide whether to show set or enter screen based on if a PIN exists.
+  React.useEffect(() => {
+    setIsSettingPin(!pin);
+  }, [pin]);
+
   const handleEnter = () => {
+    // If we are setting a new pin
     if (isSettingPin) {
       if (input.length < 4) {
         toast({ title: "PIN too short", description: "Please use at least 4 digits.", variant: "destructive" });
@@ -31,7 +38,8 @@ export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
         return;
       }
       onPinSet(input);
-    } else {
+      // No need to call onUnlock here, onPinSet handles it.
+    } else { // If we are entering an existing pin
       if (input === pin) {
         onUnlock();
       } else {
@@ -47,6 +55,12 @@ export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
     }
   }
 
+  const handleReset = () => {
+    setInput("");
+    setConfirmInput("");
+    setIsSettingPin(true);
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
@@ -60,7 +74,7 @@ export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
           </CardTitle>
           <CardDescription>
             {isSettingPin
-              ? "Create a 4-digit PIN to secure your app."
+              ? "Create a PIN to secure your app."
               : "Enter your PIN to unlock."}
           </CardDescription>
         </CardHeader>
@@ -89,8 +103,8 @@ export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
             <Lock className="mr-2 h-4 w-4" />
             {isSettingPin ? "Set PIN" : "Unlock"}
           </Button>
-          {!isSettingPin && (
-             <Button variant="link" onClick={() => setIsSettingPin(true)}>
+          {!isSettingPin && pin && (
+             <Button variant="link" onClick={handleReset}>
                 Forgot PIN? Reset it.
             </Button>
           )}
