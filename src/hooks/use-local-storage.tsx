@@ -7,29 +7,26 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(initialValue);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
+    if (typeof window !== 'undefined' && !isInitialized) {
+      try {
+        const item = window.localStorage.getItem(key);
+        const value = item ? JSON.parse(item, (k, v) => {
+          if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(v)) {
+            return new Date(v);
+          }
+          return v;
+        }) : initialValue;
+        setStoredValue(value);
+      } catch (error) {
+        console.log(error);
+        setStoredValue(initialValue);
+      }
+      setIsInitialized(true);
     }
-    try {
-      // Get from local storage by key
-      const item = window.localStorage.getItem(key);
-      // Parse stored json or if none return initialValue
-      const value = item ? JSON.parse(item, (k, v) => {
-        // Attempt to parse dates
-        if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(v)) {
-          return new Date(v);
-        }
-        return v;
-      }) : initialValue;
-      setStoredValue(value);
-    } catch (error) {
-      // If error also return initialValue
-      console.log(error);
-      setStoredValue(initialValue);
-    }
-  }, [key, initialValue]);
+  }, [key, initialValue, isInitialized]);
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
