@@ -16,6 +16,7 @@ export type Plan = {
   type: "buy" | "activity" | "gift";
   title: string;
   estimatedCost: number;
+  finalCost?: number;
   startDate: Date;
   endDate: Date;
   purpose?: string;

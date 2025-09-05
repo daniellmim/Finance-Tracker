@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { v4 as uuidv4 } from "uuid";
-import { addDays, startOfMonth } from "date-fns";
 import type { Expense, Category, Plan, Wish } from "@/lib/types";
 import useLocalStorage from "./use-local-storage";
 
@@ -16,6 +15,7 @@ interface AppDataContextType {
   addPlan: (plan: Omit<Plan, "id">) => void;
   updatePlan: (plan: Plan) => void;
   deletePlan: (id: string) => void;
+  completePlan: (planId: string, finalAmount: number) => void;
   wishes: Wish[];
   addWish: (name: string) => void;
   deleteWish: (id: string) => void;
@@ -33,17 +33,17 @@ const defaultCategories: Category[] = [
 const createDefaultExpenses = (): Expense[] => {
     const today = new Date();
     return [
-        { id: uuidv4(), description: 'Coffee with a friend', amount: 4.50, category: 'Dining Out', date: addDays(today, -1) },
-        { id: uuidv4(), description: 'Weekly grocery shopping', amount: 75.20, category: 'Groceries', date: addDays(today, -2) },
-        { id: uuidv4(), description: 'New headphones', amount: 129.99, category: 'Shopping', date: addDays(today, -4) },
+        { id: uuidv4(), description: 'Coffee with a friend', amount: 4.50, category: 'Dining Out', date: new Date(new Date().setDate(today.getDate() - 1)) },
+        { id: uuidv4(), description: 'Weekly grocery shopping', amount: 75.20, category: 'Groceries', date: new Date(new Date().setDate(today.getDate() - 2)) },
+        { id: uuidv4(), description: 'New headphones', amount: 129.99, category: 'Shopping', date: new Date(new Date().setDate(today.getDate() - 4)) },
     ];
 };
 
 const createDefaultPlans = (): Plan[] => {
     const today = new Date();
     return [
-        { id: uuidv4(), type: 'buy', title: 'New Laptop', estimatedCost: 1200, startDate: addDays(today, 10), endDate: addDays(today, 40), category: 'Shopping', priority: 'high', status: 'active', purpose: 'Work' },
-        { id: uuidv4(), type: 'activity', title: 'Weekend trip', estimatedCost: 300, startDate: addDays(today, 20), endDate: addDays(today, 22), category: 'Travel', priority: 'medium', status: 'active' },
+        { id: uuidv4(), type: 'buy', title: 'New Laptop', estimatedCost: 1200, startDate: new Date(new Date().setDate(today.getDate() + 10)), endDate: new Date(new Date().setDate(today.getDate() + 40)), category: 'Shopping', priority: 'high', status: 'active', purpose: 'Work' },
+        { id: uuidv4(), type: 'activity', title: 'Weekend trip', estimatedCost: 300, startDate: new Date(new Date().setDate(today.getDate() + 20)), endDate: new Date(new Date().setDate(today.getDate() + 22)), category: 'Travel', priority: 'medium', status: 'active' },
     ];
 };
 
@@ -59,29 +59,25 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useLocalStorage<Category[]>("categories", defaultCategories);
   const [plans, setPlans] = useLocalStorage<Plan[]>("plans", []);
   const [wishes, setWishes] = useLocalStorage<Wish[]>("wishes", []);
-  const [isInitialized, setIsInitialized] = React.useState(false);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-        const expensesStored = window.localStorage.getItem("expenses");
-        if (!expensesStored) {
-            setExpenses(createDefaultExpenses());
-        }
-        const plansStored = window.localStorage.getItem("plans");
-        if (!plansStored) {
-            setPlans(createDefaultPlans());
-        }
-        const wishesStored = window.localStorage.getItem("wishes");
-        if (!wishesStored) {
-            setWishes(createDefaultWishes());
-        }
-        setIsInitialized(true);
+    const expensesStored = window.localStorage.getItem("expenses");
+    if (!expensesStored) {
+        setExpenses(createDefaultExpenses());
+    }
+    const plansStored = window.localStorage.getItem("plans");
+    if (!plansStored) {
+        setPlans(createDefaultPlans());
+    }
+    const wishesStored = window.localStorage.getItem("wishes");
+    if (!wishesStored) {
+        setWishes(createDefaultWishes());
     }
   }, [setExpenses, setPlans, setWishes]);
 
 
   const addExpense = (expense: Omit<Expense, "id">) => {
-    setExpenses((prev) => [{ ...expense, id: uuidv4() }, ...prev]);
+    setExpenses((prev) => [{ ...expense, id: uuidv4(), date: new Date(expense.date) }, ...prev]);
   };
   const deleteExpense = (id: string) => {
     setExpenses((prev) => prev.filter((exp) => exp.id !== id));
@@ -102,6 +98,24 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const deletePlan = (id: string) => {
     setPlans((prev) => prev.filter(p => p.id !== id));
   };
+
+  const completePlan = (planId: string, finalAmount: number) => {
+    const planToComplete = plans.find(p => p.id === planId);
+    if (!planToComplete) return;
+
+    // Add to expenses
+    const newExpense: Omit<Expense, 'id'> = {
+      description: planToComplete.title,
+      amount: finalAmount,
+      category: planToComplete.category,
+      date: new Date(), // use today's date for the expense
+    };
+    addExpense(newExpense);
+
+    // Update plan status
+    updatePlan({ ...planToComplete, status: 'completed', finalCost: finalAmount });
+  };
+
 
   const addWish = (name: string) => {
     setWishes((prev) => [{ name, id: uuidv4(), createdAt: new Date() }, ...prev]);
@@ -131,16 +145,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const value = {
     expenses, addExpense, deleteExpense,
     categories, addCategory,
-    plans, addPlan, updatePlan, deletePlan,
+    plans, addPlan, updatePlan, deletePlan, completePlan,
     wishes, addWish, deleteWish,
     importData, exportData
   };
   
-  // Render children only after initialization on the client
-  if (typeof window === 'undefined' || !isInitialized) {
-    return null; // Or a loading spinner
-  }
-
   return (
     <AppDataContext.Provider value={value}>
       {children}
