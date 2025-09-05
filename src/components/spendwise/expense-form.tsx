@@ -59,7 +59,7 @@ export default function ExpenseForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: "",
-      amount: undefined,
+      amount: "" as any,
       category: "",
       date: new Date(),
     },
@@ -68,6 +68,7 @@ export default function ExpenseForm({
   function onSubmit(values: z.infer<typeof formSchema>) {
     onAddExpense(values);
     form.reset();
+    form.setValue("amount", "" as any);
   }
 
   const handleSuggestCategory = async () => {
