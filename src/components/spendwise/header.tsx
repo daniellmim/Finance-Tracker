@@ -46,12 +46,14 @@ export default function AppHeader({
       </div>
       <div className="ml-auto flex items-center gap-2">
         <CategoryManager categories={categories} onCategoryAdd={onCategoryAdd}>
-          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-            <Tag />
-            Manage Categories
-          </Button>
-           <Button variant="outline" size="icon" className="sm:hidden">
-            <Tag />
+          <Button variant="outline" size="sm" className="relative">
+            <span className="hidden sm:inline-flex items-center gap-2">
+              <Tag />
+              Manage Categories
+            </span>
+            <span className="sm:hidden">
+              <Tag />
+            </span>
           </Button>
         </CategoryManager>
         
