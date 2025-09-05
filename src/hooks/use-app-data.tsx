@@ -54,26 +54,27 @@ const createDefaultWishes = (): Wish[] => {
 };
 
 
-export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", []);
-  const [categories, setCategories] = useLocalStorage<Category[]>("categories", defaultCategories);
-  const [plans, setPlans] = useLocalStorage<Plan[]>("plans", []);
-  const [wishes, setWishes] = useLocalStorage<Wish[]>("wishes", []);
+export function AppDataProvider({ children, userId }: { children: React.ReactNode, userId: string }) {
+  const [expenses, setExpenses] = useLocalStorage<Expense[]>(`${userId}-expenses`, []);
+  const [categories, setCategories] = useLocalStorage<Category[]>(`${userId}-categories`, defaultCategories);
+  const [plans, setPlans] = useLocalStorage<Plan[]>(`${userId}-plans`, []);
+  const [wishes, setWishes] = useLocalStorage<Wish[]>(`${userId}-wishes`, []);
 
   React.useEffect(() => {
-    const expensesStored = window.localStorage.getItem("expenses");
-    if (!expensesStored) {
+    const expensesStored = window.localStorage.getItem(`${userId}-expenses`);
+    if (!expensesStored || JSON.parse(expensesStored).length === 0) {
         setExpenses(createDefaultExpenses());
     }
-    const plansStored = window.localStorage.getItem("plans");
-    if (!plansStored) {
+    const plansStored = window.localStorage.getItem(`${userId}-plans`);
+    if (!plansStored || JSON.parse(plansStored).length === 0) {
         setPlans(createDefaultPlans());
     }
-    const wishesStored = window.localStorage.getItem("wishes");
-    if (!wishesStored) {
+    const wishesStored = window.localStorage.getItem(`${userId}-wishes`);
+    if (!wishesStored || JSON.parse(wishesStored).length === 0) {
         setWishes(createDefaultWishes());
     }
-  }, [setExpenses, setPlans, setWishes]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, setExpenses, setPlans, setWishes]);
 
 
   const addExpense = (expense: Omit<Expense, "id">) => {

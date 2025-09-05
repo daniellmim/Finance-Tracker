@@ -2,17 +2,18 @@
 
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
-import { addDays, startOfMonth } from "date-fns";
-import { v4 as uuidv4 } from "uuid";
-
-import type { Expense, Category } from "@/lib/types";
+import { startOfMonth } from "date-fns";
 import AppHeader from "@/components/spendwise/header";
 import ExpenseForm from "@/components/spendwise/expense-form";
 import SpendingOverview from "@/components/spendwise/spending-overview";
 import ExpenseList from "@/components/spendwise/expense-list";
 import { useAppData } from "@/hooks/use-app-data";
 
-export default function ExpenseTracker() {
+type ExpenseTrackerProps = {
+  onLogout: () => void;
+};
+
+export default function ExpenseTracker({ onLogout }: ExpenseTrackerProps) {
   const { 
     expenses, 
     addExpense,
@@ -43,6 +44,8 @@ export default function ExpenseTracker() {
         expenses={filteredExpenses}
         categories={categories}
         onCategoryAdd={addCategory}
+        onLogout={onLogout}
+        showPlannerSettings={false}
       />
       <main className="container mx-auto grid flex-1 auto-rows-max gap-8 px-4 py-8 md:grid-cols-3 lg:px-8">
         <div className="grid auto-rows-max items-start gap-8 md:col-span-2">
