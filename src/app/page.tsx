@@ -22,7 +22,7 @@ export default function Home() {
   const handlePinUnlock = () => {
     setUnlocked(true);
   };
-  
+
   // When the component unmounts or the tab is closed, lock the app
   React.useEffect(() => {
     const handleBeforeUnload = () => {
@@ -31,13 +31,15 @@ export default function Home() {
       setUnlocked(false);
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    if (typeof window !== 'undefined') {
+        window.addEventListener('beforeunload', handleBeforeUnload);
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Also lock when the component unmounts (e.g., navigating away in a SPA)
-      setUnlocked(false);
-    };
+        return () => {
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+          // Also lock when the component unmounts (e.g., navigating away in a SPA)
+          setUnlocked(false);
+        };
+    }
   }, [setUnlocked]);
 
 
