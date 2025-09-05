@@ -42,7 +42,7 @@ const statusColors = {
 
 export default function PlanList({ plans }: PlanListProps) {
   
-  if (plans.length === 0) {
+  if (!plans || plans.length === 0) {
     return (
       <div className="flex h-60 items-center justify-center rounded-lg border border-dashed shadow-sm">
         <div className="text-center">

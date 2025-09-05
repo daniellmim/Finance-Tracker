@@ -49,7 +49,7 @@ export default function WishCart() {
 
         <ScrollArea className="h-72">
           <div className="space-y-2">
-            {wishes.length > 0 ? (
+            {wishes && wishes.length > 0 ? (
               wishes.map((wish) => (
                 <div
                   key={wish.id}

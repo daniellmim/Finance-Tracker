@@ -30,26 +30,55 @@ const defaultCategories: Category[] = [
   "Entertainment", "Health", "Travel", "Gift", "Personal Care"
 ];
 
-const today = new Date();
-const defaultExpenses: Expense[] = [
-    { id: uuidv4(), description: 'Coffee with a friend', amount: 4.50, category: 'Dining Out', date: addDays(today, -1) },
-    { id: uuidv4(), description: 'Weekly grocery shopping', amount: 75.20, category: 'Groceries', date: addDays(today, -2) },
-    { id: uuidv4(), description: 'New headphones', amount: 129.99, category: 'Shopping', date: addDays(today, -4) },
-];
-const defaultPlans: Plan[] = [
-    { id: uuidv4(), type: 'buy', title: 'New Laptop', estimatedCost: 1200, startDate: addDays(today, 10), endDate: addDays(today, 40), category: 'Shopping', priority: 'high', status: 'active', purpose: 'Work' },
-    { id: uuidv4(), type: 'activity', title: 'Weekend trip', estimatedCost: 300, startDate: addDays(today, 20), endDate: addDays(today, 22), category: 'Travel', priority: 'medium', status: 'active' },
-];
-const defaultWishes: Wish[] = [
-    { id: uuidv4(), name: 'AirPods Pro', createdAt: new Date() },
-];
+const createDefaultExpenses = (): Expense[] => {
+    const today = new Date();
+    return [
+        { id: uuidv4(), description: 'Coffee with a friend', amount: 4.50, category: 'Dining Out', date: addDays(today, -1) },
+        { id: uuidv4(), description: 'Weekly grocery shopping', amount: 75.20, category: 'Groceries', date: addDays(today, -2) },
+        { id: uuidv4(), description: 'New headphones', amount: 129.99, category: 'Shopping', date: addDays(today, -4) },
+    ];
+};
+
+const createDefaultPlans = (): Plan[] => {
+    const today = new Date();
+    return [
+        { id: uuidv4(), type: 'buy', title: 'New Laptop', estimatedCost: 1200, startDate: addDays(today, 10), endDate: addDays(today, 40), category: 'Shopping', priority: 'high', status: 'active', purpose: 'Work' },
+        { id: uuidv4(), type: 'activity', title: 'Weekend trip', estimatedCost: 300, startDate: addDays(today, 20), endDate: addDays(today, 22), category: 'Travel', priority: 'medium', status: 'active' },
+    ];
+};
+
+const createDefaultWishes = (): Wish[] => {
+    return [
+        { id: uuidv4(), name: 'AirPods Pro', createdAt: new Date() },
+    ];
+};
 
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", defaultExpenses);
+  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", []);
   const [categories, setCategories] = useLocalStorage<Category[]>("categories", defaultCategories);
-  const [plans, setPlans] = useLocalStorage<Plan[]>("plans", defaultPlans);
-  const [wishes, setWishes] = useLocalStorage<Wish[]>("wishes", defaultWishes);
+  const [plans, setPlans] = useLocalStorage<Plan[]>("plans", []);
+  const [wishes, setWishes] = useLocalStorage<Wish[]>("wishes", []);
+  const [isInitialized, setIsInitialized] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const expensesStored = window.localStorage.getItem("expenses");
+        if (!expensesStored) {
+            setExpenses(createDefaultExpenses());
+        }
+        const plansStored = window.localStorage.getItem("plans");
+        if (!plansStored) {
+            setPlans(createDefaultPlans());
+        }
+        const wishesStored = window.localStorage.getItem("wishes");
+        if (!wishesStored) {
+            setWishes(createDefaultWishes());
+        }
+        setIsInitialized(true);
+    }
+  }, [setExpenses, setPlans, setWishes]);
+
 
   const addExpense = (expense: Omit<Expense, "id">) => {
     setExpenses((prev) => [{ ...expense, id: uuidv4() }, ...prev]);
@@ -84,10 +113,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const importData = (jsonString: string): boolean => {
     try {
         const data = JSON.parse(jsonString);
-        if (data.expenses) setExpenses(data.expenses);
+        if (data.expenses) setExpenses(data.expenses.map((e: any) => ({...e, date: new Date(e.date)})));
         if (data.categories) setCategories(data.categories);
-        if (data.plans) setPlans(data.plans);
-        if (data.wishes) setWishes(data.wishes);
+        if (data.plans) setPlans(data.plans.map((p: any) => ({...p, startDate: new Date(p.startDate), endDate: new Date(p.endDate)})));
+        if (data.wishes) setWishes(data.wishes.map((w: any) => ({...w, createdAt: new Date(w.createdAt)})));
         return true;
     } catch (e) {
         console.error("Failed to import data", e);
@@ -106,6 +135,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     wishes, addWish, deleteWish,
     importData, exportData
   };
+  
+  // Render children only after initialization on the client
+  if (typeof window === 'undefined' || !isInitialized) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <AppDataContext.Provider value={value}>

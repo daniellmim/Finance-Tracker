@@ -24,11 +24,12 @@ export default function Planner() {
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const filteredPlans = React.useMemo(() => {
+    if (!plans) return [];
     return plans.filter(plan => 
       plan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       plan.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.recipient?.toLowerCase().includes(searchTerm.toLowerCase())
+      (plan.purpose && plan.purpose.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (plan.recipient && plan.recipient.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [plans, searchTerm]);
 

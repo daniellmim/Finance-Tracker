@@ -21,6 +21,7 @@ export default function PlanCalendarView({ plans }: PlanCalendarViewProps) {
   const [month, setMonth] = React.useState(new Date());
 
   const planEvents = React.useMemo(() => {
+    if (!plans) return [];
     const events: { date: Date; plan: Plan }[] = [];
     plans.forEach((plan) => {
       const interval = eachDayOfInterval({
@@ -54,7 +55,7 @@ export default function PlanCalendarView({ plans }: PlanCalendarViewProps) {
     );
   };
   
-  const plansInMonth = plans.filter(p => {
+  const plansInMonth = (plans || []).filter(p => {
     const planStart = new Date(p.startDate);
     const planEnd = new Date(p.endDate);
     const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
