@@ -37,15 +37,19 @@ export default function Auth({ isLogin, onLogin, onSignup, toggleForm }: AuthPro
 
   const form = useForm<LoginSchema | SignupSchema>({
     resolver: zodResolver(isLogin ? loginSchema : signupSchema),
-    defaultValues: isLogin
-      ? { email: "", password: "" }
-      : { username: "", email: "", password: "" },
+    defaultValues: {
+        username: "",
+        email: "",
+        password: ""
+    },
   });
   
   React.useEffect(() => {
-    form.reset( isLogin
-      ? { email: "", password: "" }
-      : { username: "", email: "", password: "" });
+    form.reset({
+        username: "",
+        email: "",
+        password: ""
+    });
   }, [isLogin, form]);
 
 
