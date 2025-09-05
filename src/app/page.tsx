@@ -8,6 +8,11 @@ import AppDashboard from "@/components/spendwise/app-dashboard";
 export default function Home() {
   const [unlocked, setUnlocked] = useLocalStorage("app-unlocked", false);
   const [pin, setPin] = useLocalStorage<string | null>("app-pin", null);
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handlePinSet = (newPin: string) => {
     setPin(newPin);
@@ -35,6 +40,11 @@ export default function Home() {
     };
   }, [setUnlocked]);
 
+
+  if (!isClient) {
+    // Render a placeholder or null on the server to avoid hydration mismatch
+    return null;
+  }
 
   if (!unlocked || !pin) {
     return (

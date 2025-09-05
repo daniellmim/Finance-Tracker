@@ -16,17 +16,14 @@ type PinScreenProps = {
 export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
   const [input, setInput] = React.useState("");
   const [confirmInput, setConfirmInput] = React.useState("");
-  // This state now correctly reflects if we are in 'set' or 'enter' mode.
-  const [isSettingPin, setIsSettingPin] = React.useState(false);
+  const [isSettingPin, setIsSettingPin] = React.useState(!pin);
   const { toast } = useToast();
 
-  // Effect to decide whether to show set or enter screen based on if a PIN exists.
   React.useEffect(() => {
     setIsSettingPin(!pin);
   }, [pin]);
 
   const handleEnter = () => {
-    // If we are setting a new pin
     if (isSettingPin) {
       if (input.length < 4) {
         toast({ title: "PIN too short", description: "Please use at least 4 digits.", variant: "destructive" });
@@ -38,8 +35,7 @@ export default function PinScreen({ pin, onPinSet, onUnlock }: PinScreenProps) {
         return;
       }
       onPinSet(input);
-      // No need to call onUnlock here, onPinSet handles it.
-    } else { // If we are entering an existing pin
+    } else {
       if (input === pin) {
         onUnlock();
       } else {
