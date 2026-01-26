@@ -32,3 +32,29 @@ export type Wish = {
   name: string;
   createdAt: Date;
 };
+
+export type BankAccount = {
+  id: string;
+  name: string;
+  institution: string;
+  balance: number;
+  updatedAt: Date;
+  lastMessageId?: string;
+};
+
+export type SmsMessage = {
+  id: string;
+  bankName: string;
+  sender: string;
+  body: string;
+  receivedAt: Date;
+  detectedBalance?: number;
+};
+
+export type Liability = {
+  id: string;
+  name: string;
+  amount: number;
+  dueDate?: Date;
+  notes?: string;
+};

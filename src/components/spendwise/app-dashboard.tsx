@@ -4,6 +4,7 @@ import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExpenseTracker from "@/components/spendwise/expense-tracker";
 import Planner from "@/components/spendwise/planner";
+import BankingDashboard from "@/components/spendwise/banking-dashboard";
 import { AppDataProvider } from "@/hooks/use-app-data";
 import type { User } from "@/hooks/use-auth";
 
@@ -21,6 +22,7 @@ export default function AppDashboard({ user, onLogout }: AppDashboardProps) {
             <TabsList>
               <TabsTrigger value="expenses">Expense Tracker</TabsTrigger>
               <TabsTrigger value="planner">Planner</TabsTrigger>
+              <TabsTrigger value="banking">Banking & Forecast</TabsTrigger>
             </TabsList>
           </header>
           <TabsContent value="expenses" className="flex-1">
@@ -28,6 +30,9 @@ export default function AppDashboard({ user, onLogout }: AppDashboardProps) {
           </TabsContent>
           <TabsContent value="planner" className="flex-1">
             <Planner onLogout={onLogout} />
+          </TabsContent>
+          <TabsContent value="banking" className="flex-1">
+            <BankingDashboard onLogout={onLogout} />
           </TabsContent>
         </Tabs>
       </div>
