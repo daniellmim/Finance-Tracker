@@ -1,12 +1,32 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/sqflite.dart' as sqflite;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 class DatabaseService {
   DatabaseService._();
 
   static final DatabaseService instance = DatabaseService._();
+  final DatabaseFactory _databaseFactory = _createDatabaseFactory();
   Database? _db;
+
+  static bool get _isDesktop =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
+  static DatabaseFactory _createDatabaseFactory() {
+    if (kIsWeb) {
+      return databaseFactoryFfiWeb;
+    }
+    if (_isDesktop) {
+      sqfliteFfiInit();
+      return databaseFactoryFfi;
+    }
+    return sqflite.databaseFactory;
+  }
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -15,9 +35,12 @@ class DatabaseService {
   }
 
   Future<Database> _init() async {
-    final docs = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(docs.path, 'spendwise.db');
-    return openDatabase(dbPath, version: 1, onCreate: _onCreate);
+    final dbDir = await _databaseFactory.getDatabasesPath();
+    final dbPath = p.join(dbDir, 'spendwise.db');
+    return _databaseFactory.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(version: 1, onCreate: _onCreate),
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {

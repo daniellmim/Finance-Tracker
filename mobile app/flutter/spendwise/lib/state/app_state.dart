@@ -19,6 +19,7 @@ class AppState extends ChangeNotifier {
   final _uuid = const Uuid();
 
   bool isReady = false;
+  String? initError;
   User? currentUser;
 
   List<String> categories = [];
@@ -30,9 +31,22 @@ class AppState extends ChangeNotifier {
   List<Liability> liabilities = [];
 
   Future<void> _init() async {
-    await _dbService.database;
-    isReady = true;
+    try {
+      initError = null;
+      await _dbService.database;
+    } catch (e) {
+      debugPrint('SpendWise init error: $e');
+      initError = 'Failed to initialize local database: $e';
+    } finally {
+      isReady = true;
+      notifyListeners();
+    }
+  }
+
+  Future<void> retryInit() async {
+    isReady = false;
     notifyListeners();
+    await _init();
   }
 
   String _simpleHash(String input) {
